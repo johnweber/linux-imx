@@ -1,3 +1,21 @@
+/*
+    Wandboard board file. Copyright (C) 2013 Tapani Utriainen
+    Authors: Tapani Utriainen, Edward Lin
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -22,7 +40,10 @@
 #include "crm_regs.h"
 #include "devices-imx6q.h"
 #include "usb.h"
-//#include "cpu_op-mx6.h"
+#include "cpu_op-mx6.h"
+
+extern char *soc_reg_id;
+extern char *pu_reg_id;
 
 #define WAND_BT_ON		IMX_GPIO_NR(3, 13)
 #define WAND_BT_WAKE		IMX_GPIO_NR(3, 14)
@@ -752,6 +773,8 @@ static const struct pm_platform_data wand_pm_data = {
 
 static const struct mxc_dvfs_platform_data wand_dvfscore_data = {
 	.reg_id			= "cpu_vddgp",
+	.soc_id			= "cpu_vddsoc",
+	.pu_id			= "cpu_vddvpu",
 	.clk1_id		= "cpu_clk",
 	.clk2_id 		= "gpc_dvfs_clk",
 	.gpc_cntr_offset 	= MXC_GPC_CNTR_OFFSET,
@@ -780,6 +803,13 @@ static __init void wand_init_pm(void) {
 	imx6q_add_anatop_thermal_imx(1, &wand_thermal);
 	imx6q_add_pm_imx(0, &wand_pm_data);
 	imx6q_add_dvfs_core(&wand_dvfscore_data);
+
+	/* Required for 3.0.0 kernel */
+	gp_reg_id = wand_dvfscore_data.reg_id;
+	soc_reg_id = wand_dvfscore_data.soc_id;
+	pu_reg_id = wand_dvfscore_data.pu_id;
+	mx6_cpu_regulator_init();
+
 	imx6q_add_busfreq();
 }
 
